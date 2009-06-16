@@ -25,7 +25,9 @@ module Rip
 
     # caution: RbConfig::CONFIG['bindir'] does NOT work for me
     # on OS X
-    BINDIR = File.join('/', 'usr', 'local', 'bin')
+    # <Pistos> Well it seems to work perfectly well under Linux.  :)
+    # BINDIR = File.join('/', 'usr', 'local', 'bin')
+    BINDIR = RbConfig::CONFIG[ 'bindir' ]
 
     # Indicates that Rip isn't properly installed.
     class InstallationError < StandardError; end
