@@ -97,7 +97,7 @@ module Rip
             RbConfig::CONFIG[ 'ruby_install_name' ]
           )
         )
-        puts "Using Ruby bin: #{ruby_bin}"
+        puts "rip: using Ruby bin: #{ruby_bin}"
         if File.exist?( ruby_bin )
           rewrite_bang_line dst, "#!#{ruby_bin}"
         end
