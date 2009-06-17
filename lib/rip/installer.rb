@@ -83,7 +83,7 @@ module Rip
       end
 
       if File.exists? package_bin
-        FileUtils.cp_r package_bin + '/.', dest_bin
+        FileUtils.cp_r package_bin + '/.', dest_bin, :preserve => true
       end
     end
 
