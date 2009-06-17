@@ -17,17 +17,22 @@ module Rip
     __DIR__ = File.expand_path(File.dirname(__FILE__))
 
     HOME = File.expand_path('~')
-    USER = HOME.split('/')[-1]
+
+    USER = HOME.split('/')[-1]    # TODO: *cough*
+
+    # Work around Apple's Ruby.
+    #
+    BINDIR = if defined? RUBY_FRAMEWORK_VERSION
+               File.join("/", "usr", "bin")
+             else
+               RbConfig::CONFIG["bindir"]
+             end
+
     LIBDIR = RbConfig::CONFIG['sitelibdir']
+
     RIPDIR = File.expand_path(ENV['RIPDIR'] || File.join(HOME, '.rip'))
     RIPROOT = File.expand_path(File.join(__DIR__, '..', '..'))
     RIPINSTALLDIR = File.join(LIBDIR, 'rip')
-
-    # caution: RbConfig::CONFIG['bindir'] does NOT work for me
-    # on OS X
-    # <Pistos> Well it seems to work perfectly well under Linux.  :)
-    # BINDIR = File.join('/', 'usr', 'local', 'bin')
-    BINDIR = RbConfig::CONFIG[ 'bindir' ]
 
     # Indicates that Rip isn't properly installed.
     class InstallationError < StandardError; end
@@ -57,7 +62,6 @@ module Rip
       FileUtils.rm File.join(BINDIR, 'rip'), :verbose => verbose
 
       # just in case...
-      gembin = ENV[ 'GEMBIN' ] || 'gem'
       `#{gembin} uninstall rip 2&> /dev/null`
 
       ui.abort "rip uninstalled" if verbose
@@ -91,15 +95,10 @@ module Rip
         src = File.join(RIPROOT, 'bin', 'rip')
         dst = File.join(BINDIR, 'rip')
         FileUtils.cp src, dst, :verbose => verbose, :preserve => true
-        ruby_bin = File.expand_path(
-          File.join(
-            RbConfig::CONFIG[ 'bindir' ],
-            RbConfig::CONFIG[ 'ruby_install_name' ]
-          )
-        )
-        puts "rip: using Ruby bin: #{ruby_bin}"
-        if File.exist?( ruby_bin )
-          rewrite_bang_line dst, "#!#{ruby_bin}"
+        ruby_bin = File.expand_path(File.join(BINDIR, RbConfig::CONFIG['ruby_install_name']))
+        if File.exist? ruby_bin
+          ui.puts "rip: using Ruby bin: #{ruby_bin}"
+          rewrite_bang_line(dst, "#!#{ruby_bin}")
         end
       end
     end
@@ -246,6 +245,15 @@ module Rip
       end
 
       true
+    end
+
+    def rewrite_bang_line(file, first_line)
+      lines = File.readlines(file)[1..-1]
+      File.open(file, 'w') do |f|
+        f.puts first_line
+        f.puts lines.join("\n")
+        f.flush
+      end
     end
 
     def ui
